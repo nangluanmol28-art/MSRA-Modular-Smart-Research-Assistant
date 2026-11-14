@@ -1,0 +1,10 @@
+# ==============================================================================
+# MSRA – Modular Smart Research Assistant
+# Development, Linting & Automated Test Suite Dependencies
+# ==============================================================================
+
+# Include All Production Runtime Dependencies
+-r requirements.txt
+
+# Automated Testing Framework (Unit, DOM, Lifecycle & DOOM Resilience Suites)
+pytest>=8.0.0

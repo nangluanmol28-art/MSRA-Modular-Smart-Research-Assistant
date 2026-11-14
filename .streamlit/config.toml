@@ -1,0 +1,18 @@
+[server]
+fileWatcherType = "none"
+headless = true
+showEmailPrompt = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "dark"
+primaryColor = "#10A37F"
+backgroundColor = "#000000"
+secondaryBackgroundColor = "#0a0a0a"
+textColor = "#ECECEC"
+font = "sans serif"

@@ -1,0 +1,26 @@
+# Virtual environments
+.myenv/
+.venv/
+venv/
+
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
+# User uploads and sessions
+data/uploads/*
+!data/uploads/.gitkeep
+data/sessions/*
+!data/sessions/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# AI Model Cache
+.cache/
+huggingface_cache/

@@ -1,0 +1,28 @@
+# ==============================================================================
+# MSRA – Modular Smart Research Assistant
+# Production Runtime Dependencies
+# ==============================================================================
+
+# Core Web Framework & UI
+streamlit>=1.35.0
+
+# PDF Text Extraction & Validation
+pypdf>=4.2.0
+
+# Vector Embeddings & Similarity Indexing
+sentence-transformers>=3.0.0
+chromadb>=0.5.0
+
+# LangChain Orchestration & Document Primitives
+langchain-core>=0.2.0
+langchain>=0.2.0
+langchain-chroma>=0.1.1
+langchain-huggingface>=0.0.3
+
+# LLM Gateway & Networking (Direct REST APIs)
+requests>=2.32.0
+python-dotenv>=1.0.1
+
+# Publication Report Export Engines
+reportlab>=4.2.0
+python-docx>=1.1.0
