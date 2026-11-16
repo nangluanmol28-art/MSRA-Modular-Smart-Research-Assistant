@@ -139,27 +139,23 @@ def inject_custom_css():
     """Applies carefully scoped styling for the pure black ChatGPT research workspace."""
     st.markdown("""
 <style>
-/* 1. Surfaces & Spacing */
-html {
+/* 1. Global Viewport & Base Canvas Surfaces */
+html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
     background-color: #000000 !important;
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-}
-body {
-    overflow-x: hidden !important;
-    max-width: 100vw !important;
-}
-body, [data-testid="stAppViewContainer"], .stApp, section[data-testid="stMain"], [data-testid="stMainBlockContainer"] {
-    background-color: transparent !important;
-    background: transparent !important;
-    color: #ECECEC !important;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
-[data-testid="stAppViewContainer"] {
-    background-color: transparent !important;
-    position: relative !important;
-    z-index: 1 !important;
+[data-testid="stAppViewContainer"],
+.stApp {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background-color: #000000 !important;
 }
 
 header[data-testid="stHeader"],
@@ -170,28 +166,18 @@ header[data-testid="stHeader"],
     min-height: 0px !important;
 }
 
-section[data-testid="stMain"] {
-    padding-top: 0rem !important;
-}
-
-section[data-testid="stMain"] > div:first-child {
-    padding-top: 0.5rem !important;
-}
-
-[data-testid="stMainBlockContainer"] {
-    max-width: 800px !important;
-    margin: 0 auto !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-    padding-bottom: 9rem !important;
-}
-
-/* 2. Sidebar Styling */
+/* 2. Left Sidebar (Flush at left screen edge x=0, no 80px gap) */
 section[data-testid="stSidebar"] {
-    background-color: #171717 !important;
-    border-right: 1px solid #262626 !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
     width: 260px !important;
     min-width: 260px !important;
+    background-color: #171717 !important;
+    border-right: 1px solid #262626 !important;
+    z-index: 100 !important;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stSidebarHeader"] {
@@ -223,7 +209,198 @@ section[data-testid="stSidebar"] button[kind="secondary"]:hover {
     color: #FFFFFF !important;
 }
 
-/* 3. Prompt Pills Container & Buttons */
+/* 3. Main Workspace Container */
+section[data-testid="stMain"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+section[data-testid="stMain"] > div:first-child {
+    padding-top: 0.5rem !important;
+}
+
+/* 4. Desktop Layout (>1100px): Wide Chat + Fixed Right Tools Panel */
+@media (min-width: 1101px) {
+    .block-container,
+    [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: calc(340px + 2rem) !important;
+        padding-top: 1rem !important;
+        padding-bottom: 9.5rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Chat takes all available horizontal space up to the right panel */
+    div.st-key-chat_history_container {
+        width: 100% !important;
+        max-width: none !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    /* Fixed right-side Research Tools panel */
+    div.st-key-fixed_research_tools {
+        position: fixed !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 340px !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background-color: #0e0e0e !important;
+        border-left: 1px solid #262626 !important;
+        z-index: 99 !important;
+        padding: 1.5rem 1rem 3rem 1rem !important;
+        box-sizing: border-box !important;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    /* Subtle custom scrollbar for fixed panel */
+    div.st-key-fixed_research_tools::-webkit-scrollbar {
+        width: 5px;
+    }
+    div.st-key-fixed_research_tools::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    div.st-key-fixed_research_tools::-webkit-scrollbar-thumb {
+        background: #2a2a2a;
+        border-radius: 4px;
+    }
+
+    /* Bottom Model Selector & Chat Input alignment */
+    div[data-testid="stBottom"] .block-container,
+    div[data-testid="stBottom"] [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: calc(340px + 2rem) !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* 5. Responsive Fallback (<=1100px): Tools Panel Stacked Above Chat */
+@media (max-width: 1100px) {
+    .block-container,
+    [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        padding-bottom: 9.5rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+    }
+
+    div[data-testid="stBottom"] .block-container,
+    div[data-testid="stBottom"] [data-testid="stMainBlockContainer"] {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+        box-sizing: border-box !important;
+    }
+
+    div.st-key-fixed_research_tools {
+        order: -1 !important; /* Positions tools panel above chat */
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 480px !important;
+        overflow-y: auto !important;
+        border-left: none !important;
+        border-bottom: 1px solid #262626 !important;
+        padding: 0 0 1rem 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    div.st-key-chat_history_container {
+        order: 1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* 6. Chat Messages & Normal Sentence Text Wrapping */
+div[data-testid="stChatMessage"] {
+    background-color: transparent !important;
+    padding: 1rem 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+div[data-testid="stChatMessageContent"],
+div[data-testid="stChatMessage"] > div:nth-child(2),
+div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+div[data-testid="stChatMessage"] p,
+div[data-testid="stChatMessage"] li,
+div[data-testid="stChatMessage"] span,
+div[data-testid="stChatMessage"] div {
+    white-space: normal !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    color: #D1D5DB !important;
+}
+
+/* Markdown tables (Multi-Paper Comparison matrix) fit without horizontal squishing; allow overflow-x: auto */
+div[data-testid="stChatMessage"] table,
+div[data-testid="stMarkdownContainer"] table {
+    width: 100% !important;
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    border-collapse: collapse !important;
+    margin: 1rem 0 !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+div[data-testid="stChatMessage"] table th,
+div[data-testid="stMarkdownContainer"] table th {
+    background-color: #1a1a1a !important;
+    color: #ECECEC !important;
+    font-weight: 600 !important;
+    padding: 8px 14px !important;
+    border: 1px solid #333333 !important;
+}
+
+div[data-testid="stChatMessage"] table td,
+div[data-testid="stMarkdownContainer"] table td {
+    padding: 8px 14px !important;
+    border: 1px solid #262626 !important;
+    color: #D1D5DB !important;
+}
+
+/* 7. Prompt Pills Container & Buttons */
 .st-key-prompt_pills button,
 div[data-testid="stVerticalBlock"]:has(> div.st-key-prompt_pills) button,
 div.st-key-prompt_pills button {
@@ -259,20 +436,7 @@ div.st-key-prompt_pills button {
     box-shadow: none !important;
 }
 
-/* 4. Chat Messages */
-div[data-testid="stChatMessage"] {
-    background-color: transparent !important;
-    padding: 1rem 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-}
-
-div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
-    font-size: 15px !important;
-    line-height: 1.65 !important;
-    color: #D1D5DB !important;
-}
-
-/* 5. Sources Expander */
+/* 8. Sources Expander */
 [data-testid="stExpander"] {
     border: 1px solid #262626 !important;
     background: #0D0D0D !important;
@@ -280,10 +444,21 @@ div[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p {
     margin-top: 0.5rem !important;
 }
 
-/* 6. Bottom Model Selector */
+/* 9. Bottom Sticky Bar & Elements */
 div[data-testid="stBottom"] {
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, #000000 35%, #000000 100%) !important;
     padding-bottom: 1.25rem !important;
+    z-index: 90 !important;
+}
+
+div[data-testid="stChatInput"] {
+    width: 100% !important;
+    max-width: none !important;
+}
+
+div.st-key-model_selector {
+    width: 100% !important;
+    max-width: none !important;
 }
 
 div.st-key-model_selector button {
@@ -1455,10 +1630,10 @@ def render_research_tools_panel():
 # ------------------------------------------------------------------------------
 # 8. TOP-LEVEL WORKSPACE EXECUTION FLOW
 # ------------------------------------------------------------------------------
-col_chat, col_tools = st.columns([2.8, 1.2], gap="large")
-with col_chat:
+with st.container(key="chat_history_container"):
     render_chat_history()
-with col_tools:
+
+with st.container(key="fixed_research_tools"):
     render_research_tools_panel()
 
 render_chat_input()
