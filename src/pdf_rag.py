@@ -7,13 +7,11 @@ _venv_site = os.path.join(_proj_dir, ".myenv", "Lib", "site-packages")
 if os.path.exists(_venv_site) and _venv_site not in sys.path:
     sys.path.insert(0, _venv_site)
 
-# Prevent Windows Application Control DLL load failure on gRPC telemetry and avoid HF network checks
+# Prevent Windows Application Control DLL load failure on gRPC telemetry and configure HF
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
 os.environ["CHROMA_TELEMETRY"] = "False"
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-os.environ["HF_HUB_OFFLINE"] = "1"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 try:
     import grpc  # noqa: F401
@@ -27,40 +25,32 @@ except (ImportError, OSError):
 
 import pypdf
 from langchain_core.documents import Document
+from utils.errors import safe_log
 
 # Embeddings loader with optional Streamlit caching
 _cached_embeddings_instance = None
 
 
 def _load_embeddings():
-    """Initializes HuggingFace sentence transformer embeddings with batch_size=64, local cache, and resilient fallbacks."""
+    """Initializes HuggingFace sentence transformer embeddings with batch_size=64, caching, and resilient fallbacks."""
     encode_kwargs = {"batch_size": 64, "normalize_embeddings": True}
+    model_name = "sentence-transformers/all-MiniLM-L6-v2"
 
-    # Attempt 1: Standard langchain_huggingface with local files only
+    # Attempt 1: Check local cache first (fast, works offline / in sandboxed environments)
     try:
         from langchain_huggingface import HuggingFaceEmbeddings
         return HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_name=model_name,
             model_kwargs={"local_files_only": True},
             encode_kwargs=encode_kwargs
         )
     except Exception:
         pass
 
-    # Attempt 2: langchain_huggingface without local_files_only
-    try:
-        from langchain_huggingface import HuggingFaceEmbeddings
-        return HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            encode_kwargs=encode_kwargs
-        )
-    except Exception:
-        pass
-
-    # Attempt 3: Direct SentenceTransformer instance wrapper (zero langchain_huggingface dependency)
+    # Attempt 2: Direct SentenceTransformer with local_files_only
     try:
         from sentence_transformers import SentenceTransformer
-        st_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        st_model = SentenceTransformer(model_name, local_files_only=True)
 
         class DirectSentenceTransformerEmbeddings:
             def __init__(self, model):
@@ -77,11 +67,45 @@ def _load_embeddings():
                 return self.model.encode([clean_text], normalize_embeddings=True)[0].tolist()
 
         return DirectSentenceTransformerEmbeddings(st_model)
+    except Exception:
+        pass
+
+    # Attempt 3: Online download from Hugging Face Hub (for fresh deployments like Streamlit Cloud)
+    try:
+        from langchain_huggingface import HuggingFaceEmbeddings
+        return HuggingFaceEmbeddings(
+            model_name=model_name,
+            encode_kwargs=encode_kwargs
+        )
     except Exception as e3:
-        raise ImportError(
-            f"Failed to load sentence_transformers embeddings: {e3}. "
-            "Please activate your virtual environment: '.\\.myenv\\Scripts\\Activate.ps1'"
-        ) from e3
+        safe_log("Online langchain_huggingface load failed, trying SentenceTransformer fallback", e3)
+
+    # Attempt 4: Direct SentenceTransformer online download
+    try:
+        from sentence_transformers import SentenceTransformer
+        st_model = SentenceTransformer(model_name)
+
+        class DirectSentenceTransformerEmbeddings:
+            def __init__(self, model):
+                self.model = model
+
+            def embed_documents(self, texts: list[str]) -> list[list[float]]:
+                if not texts:
+                    return []
+                clean_texts = [x.replace("\n", " ") for x in texts]
+                return self.model.encode(clean_texts, batch_size=64, normalize_embeddings=True).tolist()
+
+            def embed_query(self, text: str) -> list[float]:
+                clean_text = text.replace("\n", " ")
+                return self.model.encode([clean_text], normalize_embeddings=True)[0].tolist()
+
+        return DirectSentenceTransformerEmbeddings(st_model)
+    except Exception as e4:
+        safe_log(f"All embedding initializations failed for '{model_name}'", e4)
+        raise RuntimeError(
+            f"Failed to load sentence_transformers embedding model '{model_name}': {e4}. "
+            "Please check internet connectivity to Hugging Face Hub on initial deployment."
+        ) from e4
 
 
 try:

@@ -24,8 +24,6 @@ os.environ["ANONYMIZED_TELEMETRY"] = "False"
 os.environ["CHROMA_TELEMETRY"] = "False"
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-os.environ["HF_HUB_OFFLINE"] = "1"
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 try:
     import grpc  # noqa: F401
@@ -591,7 +589,17 @@ def ingest_files(uploaded_files):
         total_indexed_new = 0
 
         # Retrieve or initialize the session vectorstore once
-        vectorstore = get_or_create_vectorstore(session_id=session_id)
+        try:
+            vectorstore = get_or_create_vectorstore(session_id=session_id)
+        except Exception as emb_err:
+            safe_log(f"Failed to initialize embedding model or vectorstore for session {session_id}", emb_err)
+            st.error(
+                "❌ **Embedding Model Initialization Failed**: Unable to download or load the "
+                "`sentence-transformers/all-MiniLM-L6-v2` model from Hugging Face Hub. "
+                "Please verify internet connectivity to Hugging Face and try again."
+            )
+            st.session_state["is_indexing"] = False
+            return
 
         for idx, (filename, file_bytes, file_hash) in enumerate(new_files_to_index, 1):
             pct_base = int((idx - 1) / len(new_files_to_index) * 80)
